@@ -21,6 +21,9 @@ const BlogsView = ({ blogs, blogFormRef }) => {
       <Togglable buttonLabel="create new blog" ref={blogFormRef}>
         <BlogForm blogFormRef={blogFormRef} blogService={blogService} />
       </Togglable>
+      <Typography sx={{ py: 1 }} variant="h3">
+        List of blogs:
+      </Typography>
       <TableContainer component={Paper}>
         <Table>
           <TableBody>
