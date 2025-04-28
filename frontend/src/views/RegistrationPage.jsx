@@ -9,12 +9,13 @@ import {
   useHideNotificationAfter_Time,
 } from "../contexts/NotificationContext";
 import { useUserDispatch } from "../contexts/UserContext";
+import Disclaimer from "../components/Disclaimer";
 
 const RegistrationPage = () => {
   const [username, setUsername] = useState("");
-  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [repeatedPassword, setRepeatedPassword] = useState("");
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const dispatchNotification = useNotificationDispatch();
   const dispatchHideNotification = useHideNotificationAfter_Time();
@@ -29,7 +30,6 @@ const RegistrationPage = () => {
     if (
       password.length === 0 ||
       username.length === 0 ||
-      name.length === 0 ||
       repeatedPassword.length === 0
     ) {
       dispatchNotification({ type: "EMPTY_FIELD" });
@@ -40,7 +40,7 @@ const RegistrationPage = () => {
       dispatchHideNotification(5000);
     } else {
       try {
-        await register({ username, name, password });
+        await register({ username, password });
         const user = await login({
           username,
           password,
@@ -48,7 +48,6 @@ const RegistrationPage = () => {
         dispatchUser({ type: "LOGIN", payload: user });
         blogService.setToken(user.token);
         setUsername("");
-        setName("");
         setPassword("");
         setRepeatedPassword("");
         dispatchNotification({
@@ -87,17 +86,6 @@ const RegistrationPage = () => {
         <div>
           <TextField
             sx={{ py: 1 }}
-            autoComplete="on"
-            name="name-field"
-            type="text"
-            label="name"
-            value={name}
-            onChange={({ target }) => setName(target.value)}
-          />
-        </div>
-        <div>
-          <TextField
-            sx={{ py: 1 }}
             autoComplete="off"
             name="password-field"
             type="password"
@@ -124,6 +112,21 @@ const RegistrationPage = () => {
       <Typography sx={{ py: 1 }} variant="h4">
         Already a user? Log in <a href="/">here</a>
       </Typography>
+      <div>
+        <Button
+          variant="contained"
+          color="primary"
+          type="button"
+          onClick={() =>
+            showDisclaimer === true
+              ? setShowDisclaimer(false)
+              : setShowDisclaimer(true)
+          }
+        >
+          Disclaimer
+        </Button>
+        <Disclaimer show={showDisclaimer} />
+      </div>
     </div>
   );
 };
