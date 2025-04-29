@@ -10,6 +10,7 @@ import {
 } from "../contexts/NotificationContext";
 import { useUserDispatch } from "../contexts/UserContext";
 import Disclaimer from "../components/Disclaimer";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const RegistrationPage = () => {
   const [username, setUsername] = useState("");
@@ -23,6 +24,39 @@ const RegistrationPage = () => {
   const dispatchUser = useUserDispatch();
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const registrationMutation = useMutation({
+    mutationFn: register,
+    onSuccess: async (newUserData) => {
+      const oldUserList = queryClient.getQueryData(["users"]);
+      //const newUserList = { ...oldUserList, newUserData };
+      const newUserList = oldUserList.concat(newUserData);
+      console.log("New user list after registration:", newUserList);
+      queryClient.setQueryData(["users"], newUserList);
+      const user = await login({
+        username,
+        password,
+      });
+      dispatchUser({ type: "LOGIN", payload: user });
+      blogService.setToken(user.token);
+      setUsername("");
+      setPassword("");
+      setRepeatedPassword("");
+      dispatchNotification({
+        type: "REGISTRATION_SUCCESS",
+        payload: {
+          username: username,
+        },
+      });
+      dispatchHideNotification(5000);
+      navigate("/");
+    },
+    onError: () => {
+      dispatchNotification({ type: "REGISTRATION_FAIL" });
+      dispatchHideNotification(5000);
+    },
+  });
 
   const handleRegistration = async (event) => {
     event.preventDefault();
@@ -39,30 +73,7 @@ const RegistrationPage = () => {
       dispatchNotification({ type: "PASSWORD_MISMATCH" });
       dispatchHideNotification(5000);
     } else {
-      try {
-        await register({ username, password });
-        const user = await login({
-          username,
-          password,
-        });
-        dispatchUser({ type: "LOGIN", payload: user });
-        blogService.setToken(user.token);
-        setUsername("");
-        setPassword("");
-        setRepeatedPassword("");
-        dispatchNotification({
-          type: "REGISTRATION_SUCCESS",
-          payload: {
-            username: username,
-          },
-        });
-        dispatchHideNotification(5000);
-        navigate("/");
-      } catch (exception) {
-        console.log("Registration error:", exception);
-        dispatchNotification({ type: "REGISTRATION_FAIL" });
-        dispatchHideNotification(5000);
-      }
+      registrationMutation.mutate({ username: username, password: password });
     }
   };
 
